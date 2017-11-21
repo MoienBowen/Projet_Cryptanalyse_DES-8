@@ -275,8 +275,33 @@ test_vectors()
 
 # --L[α, β] = C𝑎𝑟𝑑{𝑥 ∈ F , ⟨α, 𝑥⟩ + ⟨β, S (𝑥)⟩ = 0}----------
 
+# la fonction inverse
+def IntToList(x, n):
+  L = ZZ(x).digits(2, padto=n) #L est constitué d'entiers
+  L.reverse()
+  L = [GF(2)(el) for el in L] # L est constitué d'éléments de GF(2)
+  return L
+
+
+# Additione deux listes d'éléments de GF(2) de meme longueur
+def Add(x,y):
+  return [x[i] + y[i] for i in range(len(x))]
+
 def question2 ():
-    L = [[None for i in range(2^6)] for j in range(2^4)]
-    for alpha in range(0, 2^6):
-        for beta in range(0, 2^4):
-            L[alpha][beta] =
+    L = matrix(64, 16)
+    for a in range (64):
+        a_list = IntToList(a, 6)
+        for b in range (16):
+            b_list = IntToList(b, 4)
+            amount = 0
+            for x in range (64):
+                x_list  = IntToList(x, 6)
+                sx_list = IntToList(SBOX[4][x], 4)
+                atmp = [a_list[i] * x_list[i]  for i in range (len(a_list))]
+                ax   = sum(atmp)
+                btmp = [b_list[i] * sx_list[i] for i in range (len(b_list))]
+                bsx  = sum(btmp)
+                if (ax + bsx  == 0):
+                    amount += 1
+            L[a, b] = amount
+    return L
