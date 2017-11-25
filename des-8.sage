@@ -1,4 +1,6 @@
-# --DES-8----------
+###########################
+# DES-8
+###########################
 
 SBOX = []
 
@@ -61,7 +63,7 @@ def key_schedule(keyByteList):
     	  34, 53, 46, 42, 50, 36, 29, 32]
 
     new_key = []
-    for i in range(0, len(PC1)):
+    for i in range(len(PC1)):
         new_key.append(keyByteList[PC1[i] - 1])
 
     C0 = new_key[0 : len(new_key) / 2]
@@ -75,78 +77,77 @@ def key_schedule(keyByteList):
     Dn = []
     Shift_Dis = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1]
     Shift_Pos = 0
-    for i in range(0, 16): # Classic DES 16
+    for i in range(16):
         Shift_Pos += Shift_Dis[i]
         Cn.append(shift(C0, Shift_Pos))
         Dn.append(shift(D0, Shift_Pos))
 
     K = []
-    for i in range(0, 16): # Classic DES 16
+    for i in range(16):
         tmp = Cn[i] + Dn[i]
         tmp_K = []
-        for j in range(0, len(PC2)):
+        for j in range(len(PC2)):
             tmp_K.append(tmp[PC2[j] - 1])
 
         K.append(tmp_K)
 
     return K
 
+def expend(R32):
+    E = [32,  1,  2,  3,  4,  5,
+          4,  5,  6,  7,  8,  9,
+          8,  9, 10, 11, 12, 13,
+         12, 13, 14, 15, 16, 17,
+         16, 17, 18, 19, 20, 21,
+         20, 21, 22, 23, 24, 25,
+         24, 25, 26, 27, 28, 29,
+         28, 29, 30, 31, 32,  1]
+    R48 = []
+    for i in range(len(E)):
+        R48.append(R32[E[i] - 1])
+    return R48
+
+def xor(a, b):
+    return a.__xor__(b)
+
+def f(R, Kf):
+    R48 = expend(R)
+    pls = [] # result for K + E(R)
+    for i in range(48):
+        tmp0 = xor(Kf[i], R48[i])
+        pls.append(tmp0)
+
+    def f6to4(B, thisSbox):
+        row = B[0] * 2 + B[-1]
+        col = B[1] * (2^3) + B[2] * (2^2) + B[3] * 2 + B[4]
+        res = thisSbox[row * 16 + col].digits(2)
+        return res[::-1]
+
+    res_sbox = []
+    for i in range(8):
+        B = pls[6 * i : 6 * (i+1)]
+        tmp1 = f6to4(B, SBOX[i])
+        tmp1 = [0 for i in range(4 - len(tmp1))] + tmp1
+        res_sbox += tmp1
+
+    P = [16,  7, 20, 21, 29, 12, 28, 17,
+          1, 15, 23, 26,  5, 18, 31, 10,
+          2,  8, 24, 14, 32, 27,  3,  9,
+         19, 13, 30,  6, 22, 11,  4, 25]
+
+    res_f = []
+    for i in range(len(P)):
+        res_f.append(res_sbox[P[i] - 1])
+
+    return res_f
 
 def DES8(M, Kn):
     L0 = M[0 : len(M) / 2]
     R0 = M[len(M) / 2 : len(M)]
 
-    def xor (a, b):
-        return a.__xor__(b)
-
-    def expend(R32):
-        E = [32,  1,  2,  3,  4,  5,
-              4,  5,  6,  7,  8,  9,
-              8,  9, 10, 11, 12, 13,
-             12, 13, 14, 15, 16, 17,
-             16, 17, 18, 19, 20, 21,
-             20, 21, 22, 23, 24, 25,
-             24, 25, 26, 27, 28, 29,
-             28, 29, 30, 31, 32,  1]
-        R48 = []
-        for i in range(0, len(E)):
-            R48.append(R32[E[i] - 1])
-        return R48
-
-    def f(R, Kf):
-        R48 = expend(R)
-        pls = [] # result for K + E(R)
-        for i in range(0, 48):
-            tmp0 = xor(Kf[i], R48[i])
-            pls.append(tmp0)
-
-        def f6to4(B, thisSbox):
-            row = B[0] * 2 + B[-1]
-            col = B[1] * (2^3) + B[2] * (2^2) + B[3] * 2 + B[4]
-            res = thisSbox[row * 16 + col].digits(2)
-            return res[::-1]
-
-        res_sbox = []
-        for i in range(0, 8):
-            B = pls[6 * i : 6 * (i+1)]
-            tmp1 = f6to4(B, SBOX[i])
-            tmp1 = [0 for i in range(4 - len(tmp1))] + tmp1
-            res_sbox += tmp1
-
-        P = [16,  7, 20, 21, 29, 12, 28, 17,
-              1, 15, 23, 26,  5, 18, 31, 10,
-              2,  8, 24, 14, 32, 27,  3,  9,
-             19, 13, 30,  6, 22, 11,  4, 25]
-
-        res_f = []
-        for i in range(0, len(P)):
-            res_f.append(res_sbox[P[i] - 1])
-
-        return res_f
-
     Ln = [L0]
     Rn = [R0]
-    for i in range(0, 8): # Classic DES 16
+    for i in range(8): # Classic DES 16
         Ln.append(Rn[-1])
         resf = f(Rn[-1], Kn[i])
         new_R = []
@@ -162,7 +163,9 @@ def DES8(M, Kn):
     LastRL = Rn[-1] + Ln[-1]
     return LastRL
 
-# --------------------
+###########################
+# Test of DES-8 - Start
+###########################
 
 Keys = [[1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 1,
          1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1,
@@ -257,7 +260,6 @@ Ciphertexts = [[1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1
                 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 0, 1,
                 0, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0]]
 
-
 def test_vectors():
     nbpassed = 0
     for i in range(10):
@@ -273,7 +275,9 @@ def test_vectors():
 
 test_vectors()
 
-# --L[α, β] = C𝑎𝑟𝑑{𝑥 ∈ F , ⟨α, 𝑥⟩ + ⟨β, S (𝑥)⟩ = 0}----------
+######################
+# Question 2
+######################
 
 # la fonction inverse
 def IntToList(x, n):
@@ -282,17 +286,12 @@ def IntToList(x, n):
   L = [GF(2)(el) for el in L] # L est constitué d'éléments de GF(2)
   return L
 
-
-# Additione deux listes d'éléments de GF(2) de meme longueur
-def Add(x,y):
-  return [x[i] + y[i] for i in range(len(x))]
-
-def question2 ():
+def Card_L():
     L = matrix(64, 16)
-    for a in range (64):
-        a_list = IntToList(a, 6)
-        for b in range (16):
-            b_list = IntToList(b, 4)
+    for alpha in range (64):
+        a_list = IntToList(alpha, 6)
+        for beta in range (16):
+            b_list = IntToList(beta, 4)
             amount = 0
             for x in range (64):
                 x_list  = IntToList(x, 6)
@@ -303,5 +302,61 @@ def question2 ():
                 bsx  = sum(btmp)
                 if (ax + bsx  == 0):
                     amount += 1
-            L[a, b] = amount
+            L[alpha, beta] = amount
     return L
+
+###########################
+# Question 3
+###########################
+
+def verif_proba_XY(K):
+    X = [randint(0, 1) for x in range(32)]
+    Y = f(X, K)
+    right = xor(xor(Y[2], Y[7]), xor(Y[13], Y[24]))
+    if(X[15] == right):
+        return True
+    else:
+        return False
+
+nb_equal = 0
+for i in range(100):
+    if(verif_proba_XY(Keys[0])):
+        nb_equal += 1
+
+print("Proba de Q3: %s") % (nb_equal/100)
+
+###########################
+# Question 4
+###########################
+
+def verif_proba_LR(M, sk):
+    sk_LR = key_schedule(sk)
+    L0 = M[0 : len(M) / 2]
+    R0 = M[len(M) / 2 : len(M)]
+    M1 = DES8(M, sk_LR)
+    M2 = DES8(M1, sk_LR)
+    M3 = DES8(M1, sk_LR)
+    L3 = M3[0 : len(M3) / 2]
+    R3 = M3[len(M3) / 2 : len(M3)]
+
+    left = L0[2] + L0[7] + L0[13] + L0[24] + R0[16] + R3[2] + R3[7] + R3[13] + R3[24] + L3[16]
+    if(left == 0):
+        return True
+    else:
+        return False
+
+nb_equal = 0
+for i in range(10):
+    M = Plaintexts[i]
+    if(verif_proba_LR(M, Keys[0])):
+        nb_equal += 1
+    break
+
+print("Proba de Q4: %s") % (nb_equal/10)
+
+###########################
+# Fonction ne marche pas avec M = [rangint(GF(2) (0), 1) for m in range (64)]
+# Probalibité pas compris
+# Quelle relation avec formule du cours au dessous?
+# Prob_a_b = Pr[<a, x> + <b, S(x)> = 0] = L(a, b) / 2^S
+###########################
