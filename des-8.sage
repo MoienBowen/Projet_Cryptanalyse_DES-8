@@ -310,20 +310,21 @@ def Card_L():
 ###########################
 
 def verif_proba_XY(K):
-    X = [randint(0, 1) for x in range(32)]
+    X = [randint(GF(2) (0), 1) for x in range(32)]
     Y = f(X, K)
     right = xor(xor(Y[2], Y[7]), xor(Y[13], Y[24]))
-    if(X[15] == right):
+    if(X[16] == right):
         return True
     else:
         return False
 
-nb_equal = 0
-for i in range(100):
-    if(verif_proba_XY(Keys[0])):
-        nb_equal += 1
-
-print("Proba de Q3: %s") % (nb_equal/100)
+# nb_equal = 0
+# total = 10000
+# for i in range(10000):
+#     if(verif_proba_XY(Keys[0])):
+#         nb_equal += 1
+#
+# print("Proba de Q3: %s/%s") % (nb_equal, total)
 
 ###########################
 # Question 4
@@ -333,30 +334,35 @@ def verif_proba_LR(M, sk):
     sk_LR = key_schedule(sk)
     L0 = M[0 : len(M) / 2]
     R0 = M[len(M) / 2 : len(M)]
-    M1 = DES8(M, sk_LR)
-    M2 = DES8(M1, sk_LR)
-    M3 = DES8(M1, sk_LR)
-    L3 = M3[0 : len(M3) / 2]
-    R3 = M3[len(M3) / 2 : len(M3)]
 
-    left = L0[2] + L0[7] + L0[13] + L0[24] + R0[16] + R3[2] + R3[7] + R3[13] + R3[24] + L3[16]
+    Ln = [L0]
+    Rn = [R0]
+    for i in range(3):
+        Ln.append(Rn[-1])
+        resf = f(Rn[-1], sk)
+        new_R = []
+        L_tmp = Ln[-2]
+        for j in range (len(L0)):
+            tmp2 = (L_tmp[j] + resf[j]) % 2
+            new_R.append(tmp2)
+        Rn.append(new_R)
+
+    left = (Ln[0][2] + Ln[0][7] + Ln[0][13] + Ln[0][24] + Rn[0][16] + Rn[3][2] + Rn[3][7] + Rn[3][13] + Rn[3][24] + Ln[3][16]) % 2
     if(left == 0):
         return True
     else:
         return False
 
-nb_equal = 0
-for i in range(10):
-    M = Plaintexts[i]
-    if(verif_proba_LR(M, Keys[0])):
-        nb_equal += 1
-    break
-
-print("Proba de Q4: %s") % (nb_equal/10)
+# nb_equal = 0
+# total = 10000
+# for i in range(total):
+#     # M = Plaintexts[i]
+#     M = [randint(0, 1) for m in range (64)]
+#     if(verif_proba_LR(M, Keys[0])):
+#         nb_equal += 1
+#
+# print("Proba de Q4: %s/%s") % (nb_equal, total)
 
 ###########################
-# Fonction ne marche pas avec M = [rangint(GF(2) (0), 1) for m in range (64)]
-# Probalibité pas compris
-# Quelle relation avec formule du cours au dessous?
-# Prob_a_b = Pr[<a, x> + <b, S(x)> = 0] = L(a, b) / 2^S
+# Question 5
 ###########################
