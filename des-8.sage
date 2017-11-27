@@ -306,7 +306,7 @@ def Card_L():
 # Question 3
 ###########################
 
-def verif_proba_XY(K):
+def proba_XY(K):
     X = [randint(GF(2) (0), 1) for x in range(32)]
     Y = f(X, K)
     right = (Y[2] + Y[7] + Y[13] +Y[24]) % 2
@@ -318,7 +318,7 @@ def verif_proba_XY(K):
 # nb_equal = 0
 # total = 10000
 # for i in range(10000):
-#     if(verif_proba_XY(Keys[0])):
+#     if(proba_XY(Keys[0])):
 #         nb_equal += 1
 #
 # print("Proba de Q3: %s/%s") % (nb_equal, total)
@@ -327,7 +327,7 @@ def verif_proba_XY(K):
 # Question 4
 ###########################
 
-def verif_proba_LR(M, sk):
+def proba_LR(M, sk):
     sk_LR = key_schedule(sk)
     L0 = M[0 : len(M) / 2]
     R0 = M[len(M) / 2 : len(M)]
@@ -353,9 +353,8 @@ def verif_proba_LR(M, sk):
 # nb_equal = 0
 # total = 10000
 # for i in range(total):
-#     # M = Plaintexts[i]
 #     M = [randint(0, 1) for m in range (64)]
-#     if(verif_proba_LR(M, Keys[0])):
+#     if(proba_LR(M, Keys[0])):
 #         nb_equal += 1
 #
 # print("Proba de Q4: %s/%s") % (nb_equal, total)
@@ -363,3 +362,128 @@ def verif_proba_LR(M, sk):
 ###########################
 # Question 5
 ###########################
+
+def DES_L1(key):
+    R1 = [randint(0, 1) for m in range (32)]
+    L_1_1 = [randint(0, 1) for m in range (32)]
+    L_2_1 = copy(L_1_1)
+    L_2_1[1] = randint(0, 1)
+    L_2_1[1] = randint(0, 1)
+
+    Ln_1 = [L_1_1]
+    Ln_2 = [L_2_1]
+    Rn_1 = [R1]
+    Rn_2 = [R1]
+
+    for i in range(4): # Classic DES 16
+        Ln_1.append(Rn_1[-1])
+        Ln_2.append(Rn_2[-1])
+        resf_1 = f(Rn_1[-1], key)
+        resf_2 = f(Rn_2[-1], key)
+        new_R1 = []
+        new_R2 = []
+        L1_tmp = Ln_1[-2]
+        L2_tmp = Ln_2[-2]
+        for j in range(len(L_1_1)):
+            tmp2 = (L1_tmp[j] + resf_1[j]) % 2
+            new_R1.append(tmp2)
+            tmp2 = (L2_tmp[j] + resf_2[j]) % 2
+            new_R2.append(tmp2)
+        Rn_1.append(new_R1)
+        Rn_2.append(new_R2)
+
+    list_diff = []
+    for i in range(len(Ln_1[-1])):
+        if Ln_1[-1][i] != Ln_2[-1][i]:
+            list_diff.append(i)
+    return list_diff
+
+def DES_R1(key):
+    R1 = [randint(0, 1) for m in range (32)]
+    L_1_1 = [randint(0, 1) for m in range (32)]
+    L_2_1 = copy(L_1_1)
+    L_2_1[1] = randint(0, 1)
+    L_2_1[1] = randint(0, 1)
+
+    Ln_1 = [L_1_1]
+    Ln_2 = [L_2_1]
+    Rn_1 = [R1]
+    Rn_2 = [R1]
+
+    for i in range(4): # Classic DES 16
+        Ln_1.append(Rn_1[-1])
+        Ln_2.append(Rn_2[-1])
+        resf_1 = f(Rn_1[-1], key)
+        resf_2 = f(Rn_2[-1], key)
+        new_R1 = []
+        new_R2 = []
+        L1_tmp = Ln_1[-2]
+        L2_tmp = Ln_2[-2]
+        for j in range(len(L_1_1)):
+            tmp2 = (L1_tmp[j] + resf_1[j]) % 2
+            new_R1.append(tmp2)
+            tmp2 = (L2_tmp[j] + resf_2[j]) % 2
+            new_R2.append(tmp2)
+        Rn_1.append(new_R1)
+        Rn_2.append(new_R2)
+
+    list_diff = []
+    for i in range(len(Rn_1[-1])):
+        if Rn_1[-1][i] != Rn_2[-1][i]:
+            list_diff.append(i)
+    return list_diff
+
+
+print ("Les indices différents entre L4 et L4* sont: %s\nLes indices différents"
+       " entre R4 et R4* sont: %s\nListe vide = Deux les deux sont pareils") \
+       % (DES_L1(Keys[6]), DES_R1(Keys[6]))
+
+
+###########################
+# Question 6
+###########################
+
+def proba_LR_7(key):
+    L1 = [randint(0, 1) for m in range (32)]
+    R_1_1 = [randint(0, 1) for m in range (32)]
+    R_2_1 = copy(R_1_1)
+    R_2_1[1] = randint(0, 1)
+    R_2_1[1] = randint(0, 1)
+
+    Ln_1 = [L1]
+    Ln_2 = [L1]
+    Rn_1 = [R_1_1]
+    Rn_2 = [R_2_1]
+
+    for i in range(6):
+        Ln_1.append(Rn_1[-1])
+        Ln_2.append(Rn_2[-1])
+        resf_1 = f(Rn_1[-1], key)
+        resf_2 = f(Rn_2[-1], key)
+        new_R1 = []
+        new_R2 = []
+        L1_tmp = Ln_1[-2]
+        L2_tmp = Ln_2[-2]
+        for j in range(len(L1)):
+            tmp2 = (L1_tmp[j] + resf_1[j]) % 2
+            new_R1.append(tmp2)
+            tmp2 = (L2_tmp[j] + resf_2[j]) % 2
+            new_R2.append(tmp2)
+        Rn_1.append(new_R1)
+        Rn_2.append(new_R2)
+
+    left = Rn_1[6][2] + Rn_1[6][7] + Rn_1[6][13] + Rn_1[6][24] + Ln_1[6][7] + \
+           Rn_2[6][2] + Rn_2[6][7] + Rn_2[6][13] + Rn_2[6][24] + Ln_2[6][16]
+
+    if left == 0:
+        return True
+    else:
+        return False
+
+nb_equal = 0
+total = 10000
+for i in range(total):
+    if(proba_LR_7(Keys[0])):
+        nb_equal += 1
+
+print("Proba de Q6: %s/%s") % (nb_equal, total)
