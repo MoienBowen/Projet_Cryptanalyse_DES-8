@@ -107,14 +107,11 @@ def expend(R32):
         R48.append(R32[E[i] - 1])
     return R48
 
-def xor(a, b):
-    return a.__xor__(b)
-
 def f(R, Kf):
     R48 = expend(R)
     pls = [] # result for K + E(R)
     for i in range(48):
-        tmp0 = xor(Kf[i], R48[i])
+        tmp0 = (Kf[i] + R48[i]) % 2
         pls.append(tmp0)
 
     def f6to4(B, thisSbox):
@@ -153,7 +150,7 @@ def DES8(M, Kn):
         new_R = []
         L_tmp = Ln[-2]
         for j in range (len(L0)):
-            tmp2 = xor(L_tmp[j], resf[j])
+            tmp2 = (L_tmp[j] + resf[j]) % 2
             new_R.append(tmp2)
         Rn.append(new_R)
 
@@ -273,7 +270,7 @@ def test_vectors():
     if nbpassed == 10:
         print "All tests Passed"
 
-test_vectors()
+# test_vectors()
 
 ######################
 # Question 2
@@ -312,7 +309,7 @@ def Card_L():
 def verif_proba_XY(K):
     X = [randint(GF(2) (0), 1) for x in range(32)]
     Y = f(X, K)
-    right = xor(xor(Y[2], Y[7]), xor(Y[13], Y[24]))
+    right = (Y[2] + Y[7] + Y[13] +Y[24]) % 2
     if(X[16] == right):
         return True
     else:
