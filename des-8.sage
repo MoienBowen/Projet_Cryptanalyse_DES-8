@@ -208,14 +208,14 @@ def proba_XY(K):
     else:
         return False
 
-# nb_equal = 0
-# total = 10000
-# key = [randint(GF(2) (0), 1) for x in range(48)]
-# for i in range(10000):
-#     if(proba_XY(key)):
-#         nb_equal += 1
-#
-# print("Proba de Q3: %s/%s") % (nb_equal, total)
+nb_equal = 0
+total = 1000
+key = [randint(GF(2) (0), 1) for x in range(48)]
+for i in range(total):
+    if(proba_XY(key)):
+        nb_equal += 1
+
+print("Proba de Q3: %s/%s") % (nb_equal, total)
 
 ###########################
 # Question 4
@@ -245,15 +245,15 @@ def proba_LR(M, sk):
     else:
         return False
 
-# nb_equal = 0
-# total = 10000
-# key = [randint(GF(2) (0), 1) for x in range(64)]
-# for i in range(total):
-#     M = [randint(0, 1) for m in range (64)]
-#     if(proba_LR(M, key)):
-#         nb_equal += 1
-#
-# print("Proba de Q4: %s/%s") % (nb_equal, total)
+nb_equal = 0
+total = 1000
+key = [randint(GF(2) (0), 1) for x in range(64)]
+for i in range(total):
+    M = [randint(0, 1) for m in range (64)]
+    if(proba_LR(M, key)):
+        nb_equal += 1
+
+print("Proba de Q4: %s/%s") % (nb_equal, total)
 
 ###########################
 # Question 5
@@ -264,8 +264,12 @@ def DES_L1_R1(key, L_or_R):
     R1 = [randint(0, 1) for m in range (32)]
     L_1_1 = [randint(0, 1) for m in range (32)]
     L_2_1 = copy(L_1_1)
-    L_2_1[1] = randint(0, 1)
-    L_2_1[2] = randint(0, 1)
+    if (randint(1, 2) == 1): # une différence
+        pos = randint(1, 2)
+        L_2_1[pos]  = (L_2_1[pos] + 1) % 2
+    else:
+        L_2_1[1] = (L_2_1[1] + 1) % 2
+        L_2_1[2] = (L_2_1[2] + 1) % 2
 
     Ln_1 = [L_1_1]
     Ln_2 = [L_2_1]
@@ -312,8 +316,12 @@ def proba_LR_7(key):
     R1 = [randint(0, 1) for m in range (32)]
     L_1_1 = [randint(0, 1) for m in range (32)]
     L_2_1 = copy(L_1_1)
-    L_2_1[1] = randint(0, 1)
-    L_2_1[2] = randint(0, 1)
+    if (randint(1, 2) == 1): # une différence
+        pos = randint(1, 2)
+        L_2_1[pos]  = (L_2_1[pos] + 1) % 2
+    else:
+        L_2_1[1] = (L_2_1[1] + 1) % 2
+        L_2_1[2] = (L_2_1[2] + 1) % 2
 
     Ln_1 = [L_1_1]
     Ln_2 = [L_2_1]
@@ -328,12 +336,13 @@ def proba_LR_7(key):
         new_R1 = []
         new_R2 = []
         for j in range(len(R1)):
-            tmp2 = (Ln_1[-2][j] + resf_1[j]) % 2
-            new_R1.append(tmp2)
-            tmp2 = (Ln_2[-2][j] + resf_2[j]) % 2
-            new_R2.append(tmp2)
+            tmp = (Ln_1[-2][j] + resf_1[j]) % 2
+            new_R1.append(tmp)
+            tmp = (Ln_2[-2][j] + resf_2[j]) % 2
+            new_R2.append(tmp)
         Rn_1.append(new_R1)
         Rn_2.append(new_R2)
+
     left = (Rn_1[6][2] + Rn_1[6][7] + Rn_1[6][13] + Rn_1[6][24] + \
             Ln_1[6][16] + \
             Rn_2[6][2] + Rn_2[6][7] + Rn_2[6][13] + Rn_2[6][24] + \
@@ -345,7 +354,7 @@ def proba_LR_7(key):
         return False
 
 nb_equal = 0
-total = 10000
+total = 1000
 key = [randint(GF(2) (0), 1) for x in range(64)]
 for i in range(total):
     if(proba_LR_7(key)):
@@ -357,13 +366,13 @@ print("Proba de Q6: %s/%s") % (nb_equal, total)
 # Question 7
 ###########################
 
-# def find_key(msg_cipher, part_key):
-#     msg_1 = msg_cipher[0]
-#     msg_2 = msg_cipher[1]
-#     # R7 = L8, donc on caluler la somme sauf L7/L7* avec R7/R7*
-#     without_L7 = (msg_1[34] + msg_1[39] + msg_1[45] + msg_1[56] + \
-#                   msg_2[34] + msg_2[39] + msg_2[45] + msg_2[56]) % 2
-#     # Récupérer L7[16] et L7*[16], R8[16] = L7[16] + f(R7, Key)[16]
+def find_key(msg_cipher, part_key):
+    msg_1 = msg_cipher[0]
+    msg_2 = msg_cipher[1]
+    # R7 = L8, donc on caluler la somme sauf L7/L7* avec R7/R7*
+    without_L7 = (msg_1[34] + msg_1[39] + msg_1[45] + msg_1[56] + \
+                  msg_2[34] + msg_2[39] + msg_2[45] + msg_2[56]) % 2
+    # Récupérer L7[16] et L7*[16], R8[16] = L7[16] + f(R7, Key)[16]
 #     R48_1_6bit = expend((msg_1[32:-1] + [msg_1[-1]]))[0:7]
 #     R48_2_6bit = expend((msg_2[32:-1] + [msg_2[-1]]))[0:7]
 #     plus_1 = [(R48_1_6bit[i] + part_key[i]) % 2 for i in range (0,6)]
