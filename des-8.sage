@@ -342,12 +342,12 @@ def proba_LR_7(key):
     else:
         return False
 
-# nb_equal = 0
-# total = 10000
-# for i in range(total):
-#     if(proba_LR_7(Keys[0])):
-#         nb_equal += 1
-#
+nb_equal = 0
+total = 10000
+for i in range(total):
+    if(proba_LR_7(Keys[0])):
+        nb_equal += 1
+
 # print("Proba de Q6: %s/%s") % (nb_equal, total)
 
 ###########################
@@ -359,9 +359,9 @@ load('./test/question7.sage')
 def find_key(msg_cipher):
     msg_1 = msg_cipher[0]
     msg_2 = msg_cipher[1]
-    # R7 = L8
+    # R7 = L8, donc on caluler la somme sauf L7/L7* avec R7/R7*
     without_L7 = (msg_1[34] + msg_1[39] + msg_1[45] + msg_1[56] + msg_2[34] + msg_2[39] + msg_2[45] + msg_2[56]) % 2
     # print without_L7
 
-for nb_couple in range(len(Couples)):
-    find_key(Couples[nb_couple])
+# for nb_couple in range(len(Couples)):
+#     find_key(Couples[nb_couple])
