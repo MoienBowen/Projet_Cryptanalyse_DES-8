@@ -210,8 +210,9 @@ def proba_XY(K):
 
 # nb_equal = 0
 # total = 10000
+# key = [randint(GF(2) (0), 1) for x in range(48)]
 # for i in range(10000):
-#     if(proba_XY(Keys[0])):
+#     if(proba_XY(key)):
 #         nb_equal += 1
 #
 # print("Proba de Q3: %s/%s") % (nb_equal, total)
@@ -246,9 +247,10 @@ def proba_LR(M, sk):
 
 # nb_equal = 0
 # total = 10000
+# key = [randint(GF(2) (0), 1) for x in range(64)]
 # for i in range(total):
 #     M = [randint(0, 1) for m in range (64)]
-#     if(proba_LR(M, Keys[0])):
+#     if(proba_LR(M, key)):
 #         nb_equal += 1
 #
 # print("Proba de Q4: %s/%s") % (nb_equal, total)
@@ -263,7 +265,7 @@ def DES_L1_R1(key, L_or_R):
     L_1_1 = [randint(0, 1) for m in range (32)]
     L_2_1 = copy(L_1_1)
     L_2_1[1] = randint(0, 1)
-    L_2_1[1] = randint(0, 1)
+    L_2_1[2] = randint(0, 1)
 
     Ln_1 = [L_1_1]
     Ln_2 = [L_2_1]
@@ -277,12 +279,10 @@ def DES_L1_R1(key, L_or_R):
         resf_2 = f(Rn_2[-1], key)
         new_R1 = []
         new_R2 = []
-        L1_tmp = Ln_1[-2]
-        L2_tmp = Ln_2[-2]
         for j in range(len(L_1_1)):
-            tmp2 = (L1_tmp[j] + resf_1[j]) % 2
+            tmp2 = (Ln_1[-2][j] + resf_1[j]) % 2
             new_R1.append(tmp2)
-            tmp2 = (L2_tmp[j] + resf_2[j]) % 2
+            tmp2 = (Ln_2[-2][j] + resf_2[j]) % 2
             new_R2.append(tmp2)
         Rn_1.append(new_R1)
         Rn_2.append(new_R2)
@@ -298,9 +298,10 @@ def DES_L1_R1(key, L_or_R):
                 list_diff.append(i)
     return list_diff
 
+# key = [randint(GF(2) (0), 1) for x in range(64)]
 # print ("Les indices différents entre L4 et L4* sont: %s\nLes indices différents"
 #        " entre R4 et R4* sont: %s\nListe vide = Deux les deux sont pareils") \
-#        % (DES_L1_R1(Keys[6], 'L'), DES_L1_R1(Keys[6], 'R'))
+#        % (DES_L1_R1(key, 'L'), DES_L1_R1(key, 'R'))
 
 ###########################
 # Question 6
@@ -308,16 +309,16 @@ def DES_L1_R1(key, L_or_R):
 
 def proba_LR_7(key):
     # On génère directement L et R du 1er tour, message original ne sert rien
-    L1 = [randint(0, 1) for m in range (32)]
-    R_1_1 = [randint(0, 1) for m in range (32)]
-    R_2_1 = copy(R_1_1)
-    R_2_1[1] = randint(0, 1)
-    R_2_1[1] = randint(0, 1)
+    R1 = [randint(0, 1) for m in range (32)]
+    L_1_1 = [randint(0, 1) for m in range (32)]
+    L_2_1 = copy(L_1_1)
+    L_2_1[1] = randint(0, 1)
+    L_2_1[2] = randint(0, 1)
 
-    Ln_1 = [L1]
-    Ln_2 = [L1]
-    Rn_1 = [R_1_1]
-    Rn_2 = [R_2_1]
+    Ln_1 = [L_1_1]
+    Ln_2 = [L_2_1]
+    Rn_1 = [R1]
+    Rn_2 = [R1]
 
     for i in range(6): # Récuperer L7 et R7 des deux messages
         Ln_1.append(Rn_1[-1])
@@ -326,71 +327,71 @@ def proba_LR_7(key):
         resf_2 = f(Rn_2[-1], key)
         new_R1 = []
         new_R2 = []
-        L1_tmp = Ln_1[-2]
-        L2_tmp = Ln_2[-2]
-        for j in range(len(L1)):
-            tmp2 = (L1_tmp[j] + resf_1[j]) % 2
+        for j in range(len(R1)):
+            tmp2 = (Ln_1[-2][j] + resf_1[j]) % 2
             new_R1.append(tmp2)
-            tmp2 = (L2_tmp[j] + resf_2[j]) % 2
+            tmp2 = (Ln_2[-2][j] + resf_2[j]) % 2
             new_R2.append(tmp2)
         Rn_1.append(new_R1)
         Rn_2.append(new_R2)
-
-    left = Rn_1[6][2] + Rn_1[6][7] + Rn_1[6][13] + Rn_1[6][24] + Ln_1[6][7] + \
-           Rn_2[6][2] + Rn_2[6][7] + Rn_2[6][13] + Rn_2[6][24] + Ln_2[6][16]
+    left = (Rn_1[6][2] + Rn_1[6][7] + Rn_1[6][13] + Rn_1[6][24] + \
+            Ln_1[6][16] + \
+            Rn_2[6][2] + Rn_2[6][7] + Rn_2[6][13] + Rn_2[6][24] + \
+            Ln_2[6][16]) % 2
 
     if left == 0:
         return True
     else:
         return False
 
-# nb_equal = 0
-# total = 10000
-# for i in range(total):
-#     if(proba_LR_7(Keys[0])):
-#         nb_equal += 1
-#
-# print("Proba de Q6: %s/%s") % (nb_equal, total)
+nb_equal = 0
+total = 10000
+key = [randint(GF(2) (0), 1) for x in range(64)]
+for i in range(total):
+    if(proba_LR_7(key)):
+        nb_equal += 1
+
+print("Proba de Q6: %s/%s") % (nb_equal, total)
 
 ###########################
 # Question 7
 ###########################
 
-def find_key(msg_cipher, part_key):
-    msg_1 = msg_cipher[0]
-    msg_2 = msg_cipher[1]
-    # R7 = L8, donc on caluler la somme sauf L7/L7* avec R7/R7*
-    without_L7 = (msg_1[34] + msg_1[39] + msg_1[45] + msg_1[56] + \
-                  msg_2[34] + msg_2[39] + msg_2[45] + msg_2[56]) % 2
-    # Récupérer L7[16] et L7*[16], R8[16] = L7[16] + f(R7, Key)[16]
-    R48_1_6bit = expend((msg_1[32:-1] + [msg_1[-1]]))[0:7]
-    R48_2_6bit = expend((msg_2[32:-1] + [msg_2[-1]]))[0:7]
-    plus_1 = [(R48_1_6bit[i] + part_key[i]) % 2 for i in range (0,6)]
-    plus_2 = [(R48_2_6bit[i] + part_key[i]) % 2 for i in range (0,6)]
+# def find_key(msg_cipher, part_key):
+#     msg_1 = msg_cipher[0]
+#     msg_2 = msg_cipher[1]
+#     # R7 = L8, donc on caluler la somme sauf L7/L7* avec R7/R7*
+#     without_L7 = (msg_1[34] + msg_1[39] + msg_1[45] + msg_1[56] + \
+#                   msg_2[34] + msg_2[39] + msg_2[45] + msg_2[56]) % 2
+#     # Récupérer L7[16] et L7*[16], R8[16] = L7[16] + f(R7, Key)[16]
+#     R48_1_6bit = expend((msg_1[32:-1] + [msg_1[-1]]))[0:7]
+#     R48_2_6bit = expend((msg_2[32:-1] + [msg_2[-1]]))[0:7]
+#     plus_1 = [(R48_1_6bit[i] + part_key[i]) % 2 for i in range (0,6)]
+#     plus_2 = [(R48_2_6bit[i] + part_key[i]) % 2 for i in range (0,6)]
+#
+#     def f6to4(B, thisSbox):
+#         row = B[0] * 2 + B[-1]
+#         col = B[1] * (2^3) + B[2] * (2^2) + B[3] * 2 + B[4]
+#         res = thisSbox[row * 16 + col].digits(2)
+#         return res[::-1]
+#
+#     f16_1 = f6to4(plus_1, SBOX[0])
+#     f16_1 = [0 for i in range(4 - len(f16_1))] + f16_1
+#     f16_1 = f16_1[2]
+#     f16_2 = f6to4(plus_2, SBOX[0])
+#     f16_2 = [0 for i in range(4 - len(f16_2))] + f16_2
+#     f16_2 = f16_2[2]
+#     L7_1_16 = (msg_1[16] + f16_1) % 2 # L7[16]
+#     L7_2_16 = (msg_2[16] + f16_2) % 2 # L7*[16]
+#
+#     # Tester si 0
+#     somme = (without_L7 + L7_1_16 + L7_2_16) % 2
+#     if somme == 0:
+#         return True # proba = 0
 
-    def f6to4(B, thisSbox):
-        row = B[0] * 2 + B[-1]
-        col = B[1] * (2^3) + B[2] * (2^2) + B[3] * 2 + B[4]
-        res = thisSbox[row * 16 + col].digits(2)
-        return res[::-1]
-
-    f16_1 = f6to4(plus_1, SBOX[0])
-    f16_1 = [0 for i in range(4 - len(f16_1))] + f16_1
-    f16_1 = f16_1[2]
-    f16_2 = f6to4(plus_2, SBOX[0])
-    f16_2 = [0 for i in range(4 - len(f16_2))] + f16_2
-    f16_2 = f16_2[2]
-    L7_1_16 = (msg_1[16] + f16_1) % 2 # L7[16]
-    L7_2_16 = (msg_2[16] + f16_2) % 2 # L7*[16]
-
-    # Tester si 0
-    somme = (without_L7 + L7_1_16 + L7_2_16) % 2
-    if somme == 0:
-        return True # proba = 0
-
-load('./test/question7.sage')
-nb_equal = 0
-for nb_couple in range(len(Couples)):
-    if find_key(Couples[nb_couple], Keys[7][0:7]):
-        nb_equal += 1
-print nb_equal
+# load('./test/question7.sage')
+# nb_equal = 0
+# for nb_couple in range(len(Couples)):
+#     if find_key(Couples[nb_couple], Keys[7][0:7]):
+#         nb_equal += 1
+# print nb_equal
