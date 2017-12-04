@@ -161,6 +161,8 @@ def DES8(M, Kn):
     return LastRL
 
 load('./test/test_vectors.sage')
+Ks =  key_schedule(Keys[7])
+DES8(Plaintexts[0], Ks)
 # test_vectors()
 
 ######################
@@ -235,20 +237,21 @@ def proba_LR(M, sk):
             new_R.append(tmp2)
         Rn.append(new_R)
 
-    left = (Ln[0][2] + Ln[0][7] + Ln[0][13] + Ln[0][24] + Rn[0][16] + Rn[3][2] + Rn[3][7] + Rn[3][13] + Rn[3][24] + Ln[3][16]) % 2
+    left = (Ln[0][2] + Ln[0][7] + Ln[0][13] + Ln[0][24] + Rn[0][16] + \
+            Rn[3][2] + Rn[3][7] + Rn[3][13] + Rn[3][24] + Ln[3][16]) % 2
     if(left == 0):
         return True
     else:
         return False
 
-nb_equal = 0
-total = 10000
-for i in range(total):
-    M = [randint(0, 1) for m in range (64)]
-    if(proba_LR(M, Keys[0])):
-        nb_equal += 1
-
-print("Proba de Q4: %s/%s") % (nb_equal, total)
+# nb_equal = 0
+# total = 10000
+# for i in range(total):
+#     M = [randint(0, 1) for m in range (64)]
+#     if(proba_LR(M, Keys[0])):
+#         nb_equal += 1
+#
+# print("Proba de Q4: %s/%s") % (nb_equal, total)
 
 ###########################
 # Question 5
@@ -299,7 +302,6 @@ def DES_L1_R1(key, L_or_R):
 #        " entre R4 et R4* sont: %s\nListe vide = Deux les deux sont pareils") \
 #        % (DES_L1_R1(Keys[6], 'L'), DES_L1_R1(Keys[6], 'R'))
 
-
 ###########################
 # Question 6
 ###########################
@@ -342,26 +344,53 @@ def proba_LR_7(key):
     else:
         return False
 
-nb_equal = 0
-total = 10000
-for i in range(total):
-    if(proba_LR_7(Keys[0])):
-        nb_equal += 1
-
+# nb_equal = 0
+# total = 10000
+# for i in range(total):
+#     if(proba_LR_7(Keys[0])):
+#         nb_equal += 1
+#
 # print("Proba de Q6: %s/%s") % (nb_equal, total)
 
 ###########################
 # Question 7
 ###########################
 
-load('./test/question7.sage')
-
-def find_key(msg_cipher):
+def find_key(msg_cipher, part_key):
     msg_1 = msg_cipher[0]
     msg_2 = msg_cipher[1]
     # R7 = L8, donc on caluler la somme sauf L7/L7* avec R7/R7*
-    without_L7 = (msg_1[34] + msg_1[39] + msg_1[45] + msg_1[56] + msg_2[34] + msg_2[39] + msg_2[45] + msg_2[56]) % 2
-    # print without_L7
+    without_L7 = (msg_1[34] + msg_1[39] + msg_1[45] + msg_1[56] + \
+                  msg_2[34] + msg_2[39] + msg_2[45] + msg_2[56]) % 2
+    # Récupérer L7[16] et L7*[16], R8[16] = L7[16] + f(R7, Key)[16]
+    R48_1_6bit = expend((msg_1[32:-1] + [msg_1[-1]]))[0:7]
+    R48_2_6bit = expend((msg_2[32:-1] + [msg_2[-1]]))[0:7]
+    plus_1 = [(R48_1_6bit[i] + part_key[i]) % 2 for i in range (0,6)]
+    plus_2 = [(R48_2_6bit[i] + part_key[i]) % 2 for i in range (0,6)]
 
-# for nb_couple in range(len(Couples)):
-#     find_key(Couples[nb_couple])
+    def f6to4(B, thisSbox):
+        row = B[0] * 2 + B[-1]
+        col = B[1] * (2^3) + B[2] * (2^2) + B[3] * 2 + B[4]
+        res = thisSbox[row * 16 + col].digits(2)
+        return res[::-1]
+
+    f16_1 = f6to4(plus_1, SBOX[0])
+    f16_1 = [0 for i in range(4 - len(f16_1))] + f16_1
+    f16_1 = f16_1[2]
+    f16_2 = f6to4(plus_2, SBOX[0])
+    f16_2 = [0 for i in range(4 - len(f16_2))] + f16_2
+    f16_2 = f16_2[2]
+    L7_1_16 = (msg_1[16] + f16_1) % 2 # L7[16]
+    L7_2_16 = (msg_2[16] + f16_2) % 2 # L7*[16]
+
+    # Tester si 0
+    somme = (without_L7 + L7_1_16 + L7_2_16) % 2
+    if somme == 0:
+        return True # proba = 0
+
+load('./test/question7.sage')
+nb_equal = 0
+for nb_couple in range(len(Couples)):
+    if find_key(Couples[nb_couple], Keys[7][0:7]):
+        nb_equal += 1
+print nb_equal
