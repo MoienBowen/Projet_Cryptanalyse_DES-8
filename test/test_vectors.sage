@@ -6,11 +6,10 @@ Ciphertexts = [[1, 0, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1
 def test_vectors():
     nbpassed = 0
     for i in range(10):
-    	Ks =  key_schedule(Keys[i]) 
+    	Ks =  key_schedule(Keys[i])
         if Ciphertexts[i] == DES8(Plaintexts[i], Ks):
 	   nbpassed += 1
 	else:
-            print "Test",i,"Failed"
+            return "Test",i,"Failed"
     if nbpassed == 10:
-        print "All tests Passed"
-
+        return "All tests Passed"

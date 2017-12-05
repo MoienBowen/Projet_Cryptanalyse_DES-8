@@ -1,3 +1,8 @@
+###############
+# Lancer test
+is_test = True
+###############
+
 ###########################
 # DES-8
 ###########################
@@ -75,15 +80,15 @@ def key_schedule(keyByteList):
 
     Cn = []
     Dn = []
-    Shift_Dis = [1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1]
+    Shift_Dis = [1, 1, 2, 2, 2, 2, 2, 2]
     Shift_Pos = 0
-    for i in range(16):
+    for i in range(8):
         Shift_Pos += Shift_Dis[i]
         Cn.append(shift(C0, Shift_Pos))
         Dn.append(shift(D0, Shift_Pos))
 
     K = []
-    for i in range(16):
+    for i in range(8):
         tmp = Cn[i] + Dn[i]
         tmp_K = []
         for j in range(len(PC2)):
@@ -160,8 +165,9 @@ def DES8(M, Kn):
     LastRL = Rn[-1] + Ln[-1]
     return LastRL
 
-load('./test/test_vectors.sage')
-test_vectors()
+if(is_test):
+    load('./test/test_vectors.sage')
+    print "Q1: %s\n" % (test_vectors())
 
 ######################
 # Question 2
@@ -193,6 +199,13 @@ def Card_L():
             L[alpha, beta] = amount
     return L
 
+if(is_test):
+    L_Q2 = Card_L()
+    print "Q2: L="
+    for i in range(64):
+        print "       %s" % (L_Q2[i])
+    print ""
+
 ###########################
 # Question 3
 ###########################
@@ -206,15 +219,16 @@ def proba_XY(K):
     else:
         return False
 
-# Clef de test, 48 pour celui-ci, mais 64 pour les restes
-key = [randint(GF(2) (0), 1) for x in range(64)]
-# nb_equal = 0
-# total = 1000
-# for i in range(total):
-#     if(proba_XY(key)):
-#         nb_equal += 1
-#
-# print("Proba de Q3: %s/%s") % (nb_equal, total)
+if(is_test):
+    # Clef de test, 48 pour celui-ci, mais 64 pour les restes
+    key = [randint(GF(2) (0), 1) for x in range(64)]
+    nb_equal = 0
+    total = 1000
+    for i in range(total):
+        if(proba_XY(key)):
+            nb_equal += 1
+
+    print("Q3: Proba = %s\n") % ((nb_equal/total).n())
 
 ###########################
 # Question 4
@@ -229,7 +243,7 @@ def proba_LR(M, sk):
     Rn = [R0]
     for i in range(3):
         Ln.append(Rn[-1])
-        resf = f(Rn[-1], sk)
+        resf = f(Rn[-1], sk_LR[i])
         new_R = []
         L_tmp = Ln[-2]
         for j in range (len(L0)):
@@ -243,21 +257,22 @@ def proba_LR(M, sk):
         return True
     else:
         return False
+if(is_test):
+    nb_equal = 0
+    total = 1000
+    for i in range(total):
+        M = [randint(0, 1) for m in range (64)]
+        if(proba_LR(M, key)):
+            nb_equal += 1
 
-# nb_equal = 0
-# total = 1000
-# for i in range(total):
-#     M = [randint(0, 1) for m in range (64)]
-#     if(proba_LR(M, key)):
-#         nb_equal += 1
-#
-# print("Proba de Q4: %s/%s") % (nb_equal, total)
+    print("Q4: Proba = %s\n") % ((nb_equal/total).n())
 
 ###########################
 # Question 5
 ###########################
 
 def DES_L1_R1(key, L_or_R):
+    Ks = key_schedule(key)
     # On génère directement L et R du 1er tour, message original ne sert rien
     R1 = [randint(0, 1) for m in range (32)]
     L_1_1 = [randint(0, 1) for m in range (32)]
@@ -274,11 +289,11 @@ def DES_L1_R1(key, L_or_R):
     Rn_1 = [R1]
     Rn_2 = [R1]
 
-    for i in range(4): # Classic DES 16
+    for i in range(1, 5): # Classic DES 16
         Ln_1.append(Rn_1[-1])
         Ln_2.append(Rn_2[-1])
-        resf_1 = f(Rn_1[-1], key)
-        resf_2 = f(Rn_2[-1], key)
+        resf_1 = f(Rn_1[-1], Ks[i])
+        resf_2 = f(Rn_2[-1], Ks[i])
         new_R1 = []
         new_R2 = []
         for j in range(len(L_1_1)):
@@ -300,15 +315,17 @@ def DES_L1_R1(key, L_or_R):
                 list_diff.append(i)
     return list_diff
 
-# print ("Les indices différents entre L4 et L4* sont: %s\nLes indices différents"
-#        " entre R4 et R4* sont: %s\nListe vide = Deux les deux sont pareils") \
-#        % (DES_L1_R1(key, 'L'), DES_L1_R1(key, 'R'))
+if(is_test):
+    print ("Q5:\nLes indices différents entre L4 et L4* sont: %s\nLes indices "
+           "différents entre R4 et R4* sont: %s\nListe vide = Deux les deux "
+           "sont pareils\n") % (DES_L1_R1(key, 'L'), DES_L1_R1(key, 'R'))
 
 ###########################
 # Question 6
 ###########################
 
 def proba_LR_7(key):
+    Ks = key_schedule(key)
     # On génère directement L et R du 1er tour, message original ne sert rien
     R1 = [randint(0, 1) for m in range (32)]
     L_1_1 = [randint(0, 1) for m in range (32)]
@@ -325,11 +342,11 @@ def proba_LR_7(key):
     Rn_1 = [R1]
     Rn_2 = [R1]
 
-    for i in range(6): # Récuperer L7 et R7 des deux messages
+    for i in range(1, 7): # Récuperer L7 et R7 des deux messages
         Ln_1.append(Rn_1[-1])
         Ln_2.append(Rn_2[-1])
-        resf_1 = f(Rn_1[-1], key)
-        resf_2 = f(Rn_2[-1], key)
+        resf_1 = f(Rn_1[-1], Ks[i])
+        resf_2 = f(Rn_2[-1], Ks[i])
         new_R1 = []
         new_R2 = []
         for j in range(len(R1)):
@@ -350,13 +367,14 @@ def proba_LR_7(key):
     else:
         return False
 
-# nb_equal = 0
-# total = 1000
-# for i in range(total):
-#     if(proba_LR_7(key)):
-#         nb_equal += 1
-#
-# print("Proba de Q6: %s/%s") % (nb_equal, total)
+if(is_test):
+    nb_equal = 0
+    total = 1000
+    for i in range(total):
+        if(proba_LR_7(key)):
+            nb_equal += 1
+
+    print("Q6: Proba = %s\n") % ((nb_equal/total).n())
 
 ###########################
 # Question 7
@@ -379,29 +397,73 @@ def find_key(msg_cipher, part_key):
     else:
         return False
 
-load('./test/question7.sage')
+if(is_test):
+    load('./test/question7.sage')
 
-for x in range(64):
+    for x in range(64):
 
-    def Int2List(x, n):
-      L = ZZ(x).digits(2, padto=n) #L est constitué d'entiers
-      L.reverse()
-      L = [(el) for el in L] # L est constitué d'éléments pas de GF(2)
-      return L
+        def Int2List(x, n):
+          L = ZZ(x).digits(2, padto=n) #L est constitué d'entiers
+          L.reverse()
+          L = [(el) for el in L] # L est constitué d'éléments pas de GF(2)
+          return L
 
-    key = Int2List(x, 6)
-    key += [0 for x in range (42)]
-    nb_equal = 0
-    for nb_couple in range(len(Couples)):
-        if find_key(Couples[nb_couple], key):
-            nb_equal += 1
-    proba = (nb_equal/len(Couples))
-    if (proba < 0.6 and proba > 0.57):
-        print "Key found %s with probability %s" % (key[:6], proba.n())
-        break
+        key = Int2List(x, 6)
+        key += [0 for x in range (42)]
+        nb_equal = 0
+        for nb_couple in range(len(Couples)):
+            if find_key(Couples[nb_couple], key):
+                nb_equal += 1
+        proba = (nb_equal/len(Couples))
+        if (proba < 0.65 and proba > 0.55):
+            print "Q7: Part of K8 found %s with probability %s\n" % (key[:6], proba.n())
+            break
 
 ###########################
 # Question 8
 ###########################
 
-# Bon courage
+# Génération de m et M
+def gen_M():
+    m = [randint(0, 1) for m in range (64)]
+
+    M = []
+    # Génération des m* en modifier 8, 16, 20, 30, 33, 34
+    for i in range(64):
+        bit_change = IntToList(i, 6)
+        msg_tmp[8] = (msg_tmp[8] + bit_change[0]) % 2
+        msg_tmp[16] = (msg_tmp[16] + bit_change[1]) % 2
+        msg_tmp[22] = (msg_tmp[22] + bit_change[2]) % 2
+        msg_tmp[30] = (msg_tmp[30] + bit_change[3]) % 2
+        msg_tmp[33] = (msg_tmp[33] + bit_change[4]) % 2
+        msg_tmp[34] = (msg_tmp[34] + bit_change[5]) % 2
+        M.append(msg_tmp)
+    return M
+
+def cipher_M(M):
+    # Génération de clef
+    key_init = [randint(GF(2) (0), 1) for x in range(64)]
+    Ks =  key_schedule(key_init)
+
+    # Chiffrement de m
+    # c = DES8(M[0], Ks)
+
+    res = [[None, None] for i in range(len(M))]
+
+    # Chiffrement de M
+    for i in range(len(M)):
+        res[i][0] = c
+        res[i][1] = DES8(M[i], Ks)
+
+    return res
+
+if(is_test):
+    M = gen_M()
+    couple_Q8 = cipher_M(M)
+    print "Q8:\n(c, c*)[0]:\n%s\n...\n(c, c*)[63]:\n%s\nToo much to show" % (couple_Q8[0], couple_Q8[63])
+
+###########################
+# Question 9
+###########################
+
+#
