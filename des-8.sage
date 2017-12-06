@@ -175,9 +175,9 @@ if(is_test):
 
 # la fonction inverse
 def IntToList(x, n):
-  L = ZZ(x).digits(2, padto=n) #L est constitué d'entiers
+  L = ZZ(x).digits(2, padto=n) #L est constitue d'entiers
   L.reverse()
-  L = [GF(2)(el) for el in L] # L est constitué d'éléments de GF(2)
+  L = [GF(2)(el) for el in L] # L est constitue d'elements de GF(2)
   return L
 
 def Card_L():
@@ -273,11 +273,11 @@ if(is_test):
 
 def DES_L1_R1(key, L_or_R):
     Ks = key_schedule(key)
-    # On génère directement L et R du 1er tour, message original ne sert rien
+    # On genere directement L et R du 1er tour, message original ne sert rien
     R1 = [randint(0, 1) for m in range (32)]
     L_1_1 = [randint(0, 1) for m in range (32)]
     L_2_1 = copy(L_1_1)
-    if (randint(1, 2) == 1): # une différence
+    if (randint(1, 2) == 1): # une difference
         pos = randint(1, 2)
         L_2_1[pos]  = (L_2_1[pos] + 1) % 2
     else:
@@ -316,8 +316,8 @@ def DES_L1_R1(key, L_or_R):
     return list_diff
 
 if(is_test):
-    print ("Q5:\nLes indices différents entre L4 et L4* sont: %s\nLes indices "
-           "différents entre R4 et R4* sont: %s\nListe vide = Deux les deux "
+    print ("Q5:\nLes indices differents entre L4 et L4* sont: %s\nLes indices "
+           "differents entre R4 et R4* sont: %s\nListe vide = Deux les deux "
            "sont pareils\n") % (DES_L1_R1(key, 'L'), DES_L1_R1(key, 'R'))
 
 ###########################
@@ -326,11 +326,11 @@ if(is_test):
 
 def proba_LR_7(key):
     Ks = key_schedule(key)
-    # On génère directement L et R du 1er tour, message original ne sert rien
+    # On genere directement L et R du 1er tour, message original ne sert rien
     R1 = [randint(0, 1) for m in range (32)]
     L_1_1 = [randint(0, 1) for m in range (32)]
     L_2_1 = copy(L_1_1)
-    if (randint(1, 2) == 1): # une différence
+    if (randint(1, 2) == 1): # une difference
         pos = randint(1, 2)
         L_2_1[pos]  = (L_2_1[pos] + 1) % 2
     else:
@@ -342,7 +342,7 @@ def proba_LR_7(key):
     Rn_1 = [R1]
     Rn_2 = [R1]
 
-    for i in range(1, 7): # Récuperer L7 et R7 des deux messages
+    for i in range(1, 7): # Recuperer L7 et R7 des deux messages
         Ln_1.append(Rn_1[-1])
         Ln_2.append(Rn_2[-1])
         resf_1 = f(Rn_1[-1], Ks[i])
@@ -403,9 +403,9 @@ if(is_test):
     for x in range(64):
 
         def Int2List(x, n):
-          L = ZZ(x).digits(2, padto=n) #L est constitué d'entiers
+          L = ZZ(x).digits(2, padto=n) #L est constitue d'entiers
           L.reverse()
-          L = [(el) for el in L] # L est constitué d'éléments pas de GF(2)
+          L = [(el) for el in L] # L est constitue d'elements pas de GF(2)
           return L
 
         key = Int2List(x, 6)
@@ -423,14 +423,15 @@ if(is_test):
 # Question 8
 ###########################
 
-# Génération de m et M
+# Generation de m et M
 def gen_M():
     m = [randint(0, 1) for m in range (64)]
 
     M = []
-    # Génération des m* en modifier 8, 16, 20, 30, 33, 34
+    # Generation des m* en modifier 8, 16, 20, 30, 33, 34
     for i in range(64):
         bit_change = IntToList(i, 6)
+        msg_tmp = copy(m)
         msg_tmp[8] = (msg_tmp[8] + bit_change[0]) % 2
         msg_tmp[16] = (msg_tmp[16] + bit_change[1]) % 2
         msg_tmp[22] = (msg_tmp[22] + bit_change[2]) % 2
@@ -441,14 +442,14 @@ def gen_M():
     return M
 
 def cipher_M(M):
-    # Génération de clef
+    # Generation de clef
     key_init = [randint(GF(2) (0), 1) for x in range(64)]
     Ks =  key_schedule(key_init)
 
-    # Chiffrement de m
-    # c = DES8(M[0], Ks)
-
     res = [[None, None] for i in range(len(M))]
+
+    # Chiffrement de m
+    c = DES8(M[0], Ks)
 
     # Chiffrement de M
     for i in range(len(M)):
