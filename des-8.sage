@@ -484,12 +484,12 @@ def one_tour(M, Key):
 def gen_couple_M(M, K1_6_bit):
     couple_msg = []
     m_Star = []
-    key = K1_6_bit + [0 for p in range(42)]
-    for k in range(64):
+    key = K1_6_bit + [_sage_const_0 for p in range(_sage_const_42)]
+    for k in range(_sage_const_64):
         c1 = one_tour(M[k], key)
-        for l in range(k + 1, 64):
+        for l in range(k + _sage_const_1, _sage_const_64):
             c2 = one_tour(M[l], key)
-            if ((c1[32:] == c2[32:]) and (c1[:32] != c2[:32])):
+            if ((c1[_sage_const_32:] == c2[_sage_const_32:]) and (c1[:_sage_const_32] != c2[:_sage_const_32])):
                 # [8], [16], [22], [30] changes disapeared
                 # at least one of [33], [34] is different
                 couple_msg.append([M[k], M[l]])
@@ -510,51 +510,82 @@ def gen_couple_M(M, K1_6_bit):
     return couple_msg
 
 # Get (c, c*) in the normal DES-8 but with (m, m*) choosen by us
+
+
 def gen_couple_c(M, kn):
     couple_c = []
     for couple_m in range(len(M)):
-        c = DES8(M[couple_m][0], kn)
-        c_star = DES8(M[couple_m][1], kn)
+        c = DES8(M[couple_m][_sage_const_0], kn)
+        c_star = DES8(M[couple_m][_sage_const_1], kn)
         couple_c.append([c, c_star])
     return couple_c
 
-if(is_test):
-    m = [randint(0, 1) for m in range (64)]
+
+if(1==1):
+    m = [randint(_sage_const_0, _sage_const_1) for m in range(_sage_const_64)]
     M = gen_M_change(m)
-    k1_6_bit = [randint(GF(2) (0), 1) for x in range(6)]
+    k1_6_bit = [randint(GF(_sage_const_2)(_sage_const_0), _sage_const_1)
+                for x in range(_sage_const_6)]
     m_and_m_star = gen_couple_M(M, k1_6_bit)
 
     print "Q8:\n(m, m*):\n%s\n%s\n...\n%s\n" % \
-    (m_and_m_star[0], m_and_m_star[1], m_and_m_star[-1])
+        (m_and_m_star[_sage_const_0], m_and_m_star[_sage_const_1],
+         m_and_m_star[-_sage_const_1])
 
-    key_init = [randint(GF(2) (0), 1) for x in range(64)]
+    key_init = [randint(GF(_sage_const_2)(_sage_const_0), _sage_const_1)
+                for x in range(_sage_const_64)]
     kn = key_schedule(key_init)
 
     c_and_c_star = gen_couple_c(m_and_m_star, kn)
     print "(c, c*):\n%s\n%s\n...\n%s\n" % \
-    (c_and_c_star[0], c_and_c_star[1], c_and_c_star[-1])
+        (c_and_c_star[_sage_const_0], c_and_c_star[_sage_const_1],
+         c_and_c_star[-_sage_const_1])
+
+    print kn[0][:6]
+    print kn[7][:6]
+    print guess_bf_K8(c_and_c_star)
 
 ###########################
 # Question 9
 ###########################
 
-# We can not find key with only 48 couple, so n * 48 couple with the same key
-key_init = [randint(GF(2) (0), 1) for x in range(64)]
-kn = key_schedule(key_init)
-print "Good K1 %s\nGood K8 %s\n" % (kn[0][:6], kn[7][:6])
-
-n = 5
-for k in range(64): # K1
-    key1 = Int2List(k, 6)
-    couple_c_x_10  = []
-    for t in range(n):
-        m = [randint(0, 1) for m in range (64)]
-        M = gen_M_change(m)
-        m_and_m_star = gen_couple_M(M, key1)
-        c_and_c_star = gen_couple_c(m_and_m_star, kn)
-        couple_c_x_10 += c_and_c_star
-
-    # Now we have 48 * n couples (c, c*) with the same key
-    # Try to find the proba of Q7, we choose the biggest
-    key8, proba = guess_bf_K8(couple_c_x_10)
-    print proba, key1, key8
+# # We can not find key with only 48 couple, so n * 48 couple with the same key
+# key_init = [randint(GF(_sage_const_2 ) (_sage_const_0 ), _sage_const_1 ) for x in range(_sage_const_64 )]
+# kn = key_schedule(key_init)
+# print "Good K1 %s\nGood K8 %s\n" % (kn[_sage_const_0 ][:_sage_const_6 ], kn[_sage_const_7 ][:_sage_const_6 ])
+#
+# n = _sage_const_5
+# for k in range(_sage_const_64 ): # K1
+#     key1 = Int2List(k, _sage_const_6 )
+#     couple_c_x_10  = []
+#     for t in range(n):
+#         m = [randint(_sage_const_0 , _sage_const_1 ) for m in range (_sage_const_64 )]
+#         M = gen_M_change(m)
+#         m_and_m_star = gen_couple_M(M, key1)
+#         c_and_c_star = gen_couple_c(m_and_m_star, kn)
+#         couple_c_x_10 += c_and_c_star
+#
+#     # Now we have 48 * n couples (c, c*) with the same key
+#     # Try to find the proba of Q7, we choose the biggest
+#     key8, proba = guess_bf_K8(couple_c_x_10)
+#     print proba, key1, key8
+# # We can not find key with only 48 couple, so n * 48 couple with the same key
+# key_init = [randint(GF(_sage_const_2 ) (_sage_const_0 ), _sage_const_1 ) for x in range(_sage_const_64 )]
+# kn = key_schedule(key_init)
+# print "Good K1 %s\nGood K8 %s\n" % (kn[_sage_const_0 ][:_sage_const_6 ], kn[_sage_const_7 ][:_sage_const_6 ])
+#
+# n = _sage_const_5
+# for k in range(_sage_const_64 ): # K1
+#     key1 = Int2List(k, _sage_const_6 )
+#     couple_c_x_10  = []
+#     for t in range(n):
+#         m = [randint(_sage_const_0 , _sage_const_1 ) for m in range (_sage_const_64 )]
+#         M = gen_M_change(m)
+#         m_and_m_star = gen_couple_M(M, key1)
+#         c_and_c_star = gen_couple_c(m_and_m_star, kn)
+#         couple_c_x_10 += c_and_c_star
+#
+#     # Now we have 48 * n couples (c, c*) with the same key
+#     # Try to find the proba of Q7, we choose the biggest
+#     key8, proba = guess_bf_K8(couple_c_x_10)
+#     print proba, key1, key8
