@@ -170,7 +170,10 @@ if(is_test):
 ######################
 # Question 2
 ######################
-
+def ListToInt(x):
+  y = copy(x)
+  y.reverse()
+  return ZZ(y,2)
 # la fonction inverse
 def IntToList(x, n):
   L = ZZ(x).digits(2, padto=n) #L est constitue d'entiers
@@ -182,20 +185,17 @@ def IntToList(x, n):
 def Card_L():
     L = matrix(64, 16)
     for alpha in range (64): # alpha in [0, 2^6]
-        a_list = IntToList(alpha, 6)
         for beta in range (16): # beta in [0, 2^4]
-            b_list = IntToList(beta, 4)
+            a_list = vector(IntToList(alpha, 6))
+            b_list = vector(IntToList(beta, 4))
             amount = 0
             for x in range (64): # x in [0, 2^6]
-                x_list  = IntToList(x, 6)
-                sx_list = IntToList(SBOX[4][x], 4)
-                atmp = [a_list[i] * x_list[i]  for i in range (len(a_list))]
-                ax   = sum(atmp)
-                btmp = [b_list[i] * sx_list[i] for i in range (len(b_list))]
-                bsx  = sum(btmp)
-                if (ax + bsx  == 0):
-                    amount += 1
-            L[alpha, beta] = amount
+                tmpA = vector(IntToList(x, 6))
+                m = IntToList(x, 6)
+                sx_list = Sbox(m, SBOX[4])
+                tmpB = vector(sx_list)
+                if a_list.dot_product(tmpA) == b_list.dot_product(tmpB):
+                     L[alpha, beta]+= 1
     return L
 
 if(is_test):
