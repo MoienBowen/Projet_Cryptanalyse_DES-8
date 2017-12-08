@@ -110,18 +110,18 @@ def expend(R32):
         R48.append(R32[E[i] - 1])
     return R48
 
+def f6to4(B, thisSbox):
+    row = B[0] * 2 + B[-1]
+    col = B[1] * (2^3) + B[2] * (2^2) + B[3] * 2 + B[4]
+    res = thisSbox[row * 16 + col].digits(2)
+    return res[::-1]
+
 def f(R, Kf):
     R48 = expend(R)
     pls = [] # result for K + E(R)
     for i in range(48):
         tmp0 = (Kf[i] + R48[i]) % 2
         pls.append(tmp0)
-
-    def f6to4(B, thisSbox):
-        row = B[0] * 2 + B[-1]
-        col = B[1] * (2^3) + B[2] * (2^2) + B[3] * 2 + B[4]
-        res = thisSbox[row * 16 + col].digits(2)
-        return res[::-1]
 
     res_sbox = []
     for i in range(8):
@@ -417,7 +417,7 @@ def Int2List(x, n):
 
 def guess_bf_K8(couples): #  brute force
     right = 0
-    k8 = []
+    k8 = None
     for x in range(64):
 
         key = Int2List(x, 6)
@@ -444,96 +444,133 @@ if(is_test):
 ###########################
 
 # Generation de m et M
+
+# Change the bit of position p
+def change_pos(msg_tmp, bit_change, p):
+    return {
+        8: ((msg_tmp[8] + bit_change[0]) % 2),
+        16: ((msg_tmp[16] + bit_change[1]) % 2),
+        22: ((msg_tmp[22] + bit_change[2]) % 2),
+        30: ((msg_tmp[30] + bit_change[3]) % 2),
+        33: ((msg_tmp[33] + bit_change[4]) % 2),
+        34: ((msg_tmp[34] + bit_change[5]) % 2),
+    }[p]
+
+# Convert position from list of 6 to list of 32
+def conv_pos(p):
+    return {
+        0: 8,
+        1: 16,
+        2: 22,
+        3: 30,
+        4: 33,
+        5: 34,
+    }[p]
+
 def gen_M_change(m):
 
     M = []
+
     # Generation des m* en modifier 8, 16, 20, 30, 33, 34
     for i in range(64):
         bit_change = Int2List(i, 6)
+        list_one = [j for j in range(6) if bit_change[j] == 1]
+        pos_list = []
+        for j in list_one:
+            pos_list.append(conv_pos(j))
         msg_tmp = copy(m)
-        msg_tmp[8] = (msg_tmp[8] + bit_change[0]) % 2
-        msg_tmp[16] = (msg_tmp[16] + bit_change[1]) % 2
-        msg_tmp[22] = (msg_tmp[22] + bit_change[2]) % 2
-        msg_tmp[30] = (msg_tmp[30] + bit_change[3]) % 2
-        msg_tmp[33] = (msg_tmp[33] + bit_change[4]) % 2
-        msg_tmp[34] = (msg_tmp[34] + bit_change[5]) % 2
+        for j in pos_list:
+            msg_tmp[j] = change_pos(msg_tmp, bit_change, j)
         M.append(msg_tmp)
 
     return M
 
 # First tour of DES-8
+
+def f_here(R, Kf):
+    R48 = [R[31], R[0], R[1], R[2], R[3], R[4]] #expend(R)
+    pls = [] # result for K + E(R)
+    for i in range(6):
+        tmp0 = (Kf[i] + R48[i]) % 2
+        pls.append(tmp0)
+
+    res_sbox = f6to4(pls, SBOX[0])
+    res_sbox = [0 for i in range(4 - len(res_sbox))] + res_sbox
+
+    # list of [0] [1] [2] [3] in res_sbox, so [8] [16] [22] [30] in R1
+    return res_sbox
+
 def one_tour(M, Key):
     L0 = M[0 : len(M) / 2]
     R0 = M[len(M) / 2 : len(M)]
 
-    Ln = [L0]
-    Rn = [R0]
-    for i in range(1):
-        Ln.append(Rn[-1])
-        resf = f(Rn[-1], Key)
-        new_R = []
-        L_tmp = Ln[-2]
-        for j in range (len(L0)):
-            tmp2 = (L_tmp[j] + resf[j]) % 2
-            new_R.append(tmp2)
-        Rn.append(new_R)
+    resf = f_here(R0, Key)
+    new_R = []
+    pos_resf = 0
+    for j in [8, 16, 22, 30]:
+        tmp2 = (L0[j] + resf[pos_resf]) % 2
+        pos_resf += 1
+        new_R.append(tmp2)
 
-    LastRL = Ln[-1] + Rn[-1]
+    LastRL = R0 + new_R
     return LastRL
 
 def gen_couple_M(M, K1_6_bit):
     couple_msg = []
     m_Star = []
-    key = K1_6_bit + [_sage_const_0 for p in range(_sage_const_42)]
-    for k in range(_sage_const_64):
+    key = K1_6_bit
+    for k in range(64):
         c1 = one_tour(M[k], key)
-        for l in range(k + _sage_const_1, _sage_const_64):
+        is_three = 0
+        for l in range(k + 1, 64):
             c2 = one_tour(M[l], key)
-            if ((c1[_sage_const_32:] == c2[_sage_const_32:]) and (c1[:_sage_const_32] != c2[:_sage_const_32])):
+            if (c1[32:] == c2[32:]):
                 # [8], [16], [22], [30] changes disapeared
                 # at least one of [33], [34] is different
                 couple_msg.append([M[k], M[l]])
+                is_three += 1
+                if (is_three == 3):
+                    break
 
-    # # Now we have 96 couples of message
-    # # Some m is already included in m*, we delete them
-    # double = []
-    # for i in range(0, len(couple_msg), 3):
-    #     for j in range(0, len(couple_msg)):
-    #         if (couple_msg[i][0] == couple_msg[j][1]):
-    #             if (not(i in double)):
-    #                 double.append(i)
-    # double = double[::-1]
-    # for x in double:
-    #     couple_msg = couple_msg[:x] + couple_msg[(x + 3):]
-    #
-    # # 48 couples of message
+    # Now we have 96 couples of message
+    # Some m is already included in m*, we delete them
+    double = []
+    for i in range(0, len(couple_msg), 3):
+        for j in range(0, len(couple_msg)):
+            if (couple_msg[i][0] == couple_msg[j][1]):
+                if (not(i in double)):
+                    double.append(i)
+    double = double[::-1]
+    for x in double:
+        couple_msg = couple_msg[:x] + couple_msg[(x + 3):]
+
+    # 48 couples of message
     return couple_msg
 
 # Get (c, c*) in the normal DES-8 but with (m, m*) choosen by us
-
-
 def gen_couple_c(M, kn):
     couple_c = []
     for couple_m in range(len(M)):
-        c = DES8(M[couple_m][_sage_const_0], kn)
-        c_star = DES8(M[couple_m][_sage_const_1], kn)
-        couple_c.append([c, c_star])
+        c_star = DES8(M[couple_m][1], kn)
+        if (couple_m % 3 == 0):
+            c = DES8(M[couple_m][0], kn)
+            couple_c.append([c, c_star])
+        else:
+            couple_c.append([couple_c[-1][0], c_star])
     return couple_c
 
 
-if(1==1):
-    m = [randint(_sage_const_0, _sage_const_1) for m in range(_sage_const_64)]
+if(is_test):
+    m = [randint(0, 1) for x in range(64)]
     M = gen_M_change(m)
-    k1_6_bit = [randint(GF(_sage_const_2)(_sage_const_0), _sage_const_1)
-                for x in range(_sage_const_6)]
+    k1_6_bit = [randint(0, 1) for x in range(6)]
     m_and_m_star = gen_couple_M(M, k1_6_bit)
 
     print "Q8:\n(m, m*):\n%s\n%s\n...\n%s\n" % \
         (m_and_m_star[_sage_const_0], m_and_m_star[_sage_const_1],
          m_and_m_star[-_sage_const_1])
 
-    key_init = [randint(GF(_sage_const_2)(_sage_const_0), _sage_const_1)
-                for x in range(_sage_const_64)]
+    key_init = [randint(0, 1) for x in range(64)]
     kn = key_schedule(key_init)
 
     c_and_c_star = gen_couple_c(m_and_m_star, kn)
@@ -541,51 +578,38 @@ if(1==1):
         (c_and_c_star[_sage_const_0], c_and_c_star[_sage_const_1],
          c_and_c_star[-_sage_const_1])
 
-    print kn[0][:6]
-    print kn[7][:6]
-    print guess_bf_K8(c_and_c_star)
 
 ###########################
 # Question 9
 ###########################
 
-# # We can not find key with only 48 couple, so n * 48 couple with the same key
-# key_init = [randint(GF(_sage_const_2 ) (_sage_const_0 ), _sage_const_1 ) for x in range(_sage_const_64 )]
-# kn = key_schedule(key_init)
-# print "Good K1 %s\nGood K8 %s\n" % (kn[_sage_const_0 ][:_sage_const_6 ], kn[_sage_const_7 ][:_sage_const_6 ])
-#
-# n = _sage_const_5
-# for k in range(_sage_const_64 ): # K1
-#     key1 = Int2List(k, _sage_const_6 )
-#     couple_c_x_10  = []
-#     for t in range(n):
-#         m = [randint(_sage_const_0 , _sage_const_1 ) for m in range (_sage_const_64 )]
-#         M = gen_M_change(m)
-#         m_and_m_star = gen_couple_M(M, key1)
-#         c_and_c_star = gen_couple_c(m_and_m_star, kn)
-#         couple_c_x_10 += c_and_c_star
-#
-#     # Now we have 48 * n couples (c, c*) with the same key
-#     # Try to find the proba of Q7, we choose the biggest
-#     key8, proba = guess_bf_K8(couple_c_x_10)
-#     print proba, key1, key8
-# # We can not find key with only 48 couple, so n * 48 couple with the same key
-# key_init = [randint(GF(_sage_const_2 ) (_sage_const_0 ), _sage_const_1 ) for x in range(_sage_const_64 )]
-# kn = key_schedule(key_init)
-# print "Good K1 %s\nGood K8 %s\n" % (kn[_sage_const_0 ][:_sage_const_6 ], kn[_sage_const_7 ][:_sage_const_6 ])
-#
-# n = _sage_const_5
-# for k in range(_sage_const_64 ): # K1
-#     key1 = Int2List(k, _sage_const_6 )
-#     couple_c_x_10  = []
-#     for t in range(n):
-#         m = [randint(_sage_const_0 , _sage_const_1 ) for m in range (_sage_const_64 )]
-#         M = gen_M_change(m)
-#         m_and_m_star = gen_couple_M(M, key1)
-#         c_and_c_star = gen_couple_c(m_and_m_star, kn)
-#         couple_c_x_10 += c_and_c_star
-#
-#     # Now we have 48 * n couples (c, c*) with the same key
-#     # Try to find the proba of Q7, we choose the biggest
-#     key8, proba = guess_bf_K8(couple_c_x_10)
-#     print proba, key1, key8
+if(is_test):
+    # We can't find key with only 48 couple, so n * 48 couples with the same key
+    key_init = [randint(0, 1) for x in range(64)]
+    kn = key_schedule(key_init)
+
+    right_p = 0
+    right_k1 = None
+    right_k8 = None
+    n = 10 # number of message group for the same key k1
+
+    for k in range(64): # K1
+        key1 = Int2List(k, 6)
+        couple_c_x_10  = []
+        for t in range(n):
+            m = [randint(0 , 1) for m in range(64)]
+            M = gen_M_change(m)
+            m_and_m_star = gen_couple_M(M, key1)
+            c_and_c_star = gen_couple_c(m_and_m_star, kn)
+            couple_c_x_10 += c_and_c_star
+
+        # Now we have 48 * n couples (c, c*) with the same key
+        # Try to find the proba of Q7, we choose the biggest
+        key8, proba = guess_bf_K8(couple_c_x_10)
+        if (proba > right_p):
+            right_p = proba
+            right_k8 = key8
+            right_k1 = key1
+
+    print "Q9:\nFirst 6-bit of K1 and K8 in DES-8:\n%s %s\n%s %s %s\n" % \
+          (kn[0][:6], kn[7][:6], right_k1, right_k8, right_p)
