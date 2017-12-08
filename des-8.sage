@@ -1,3 +1,12 @@
+#################################################
+# Master 2 Cryptologie et Sécurité Informatique
+# Projet sur la cryptanalyse du DES
+# Responsable: G. Castagnos
+# Étudiants: Maxime BINEAU
+#            Nicolas GRELLETY
+#            Bowen LIU
+#################################################
+
 ###############
 # Lance test
 is_test = False
@@ -171,6 +180,11 @@ if(is_test):
 # Question 2
 ######################
 
+def ListToInt(x):
+  y = copy(x)
+  y.reverse()
+  return ZZ(y,2)
+
 # la fonction inverse
 def IntToList(x, n):
   L = ZZ(x).digits(2, padto=n) #L est constitue d'entiers
@@ -182,20 +196,17 @@ def IntToList(x, n):
 def Card_L():
     L = matrix(64, 16)
     for alpha in range (64): # alpha in [0, 2^6]
-        a_list = IntToList(alpha, 6)
         for beta in range (16): # beta in [0, 2^4]
-            b_list = IntToList(beta, 4)
+            a_list = vector(IntToList(alpha, 6))
+            b_list = vector(IntToList(beta, 4))
             amount = 0
             for x in range (64): # x in [0, 2^6]
-                x_list  = IntToList(x, 6)
-                sx_list = IntToList(SBOX[4][x], 4)
-                atmp = [a_list[i] * x_list[i]  for i in range (len(a_list))]
-                ax   = sum(atmp)
-                btmp = [b_list[i] * sx_list[i] for i in range (len(b_list))]
-                bsx  = sum(btmp)
-                if (ax + bsx  == 0):
-                    amount += 1
-            L[alpha, beta] = amount
+                tmpA = vector(IntToList(x, 6))
+                m = IntToList(x, 6)
+                sx_list = Sbox(m, SBOX[4])
+                tmpB = vector(sx_list)
+                if a_list.dot_product(tmpA) == b_list.dot_product(tmpB):
+                     L[alpha, beta]+= 1
     return L
 
 if(is_test):
@@ -392,6 +403,18 @@ if(is_test):
 # Question 7
 ###########################
 
+def f_q7(R, Kf):
+    R48 = [R[31], R[0], R[1], R[2], R[3], R[4]] #expend(R)
+    pls = [] # result for K + E(R)
+    for i in range(6):
+        tmp0 = (Kf[i] + R48[i]) % 2
+        pls.append(tmp0)
+
+    res_sbox = f6to4(pls, SBOX[0])
+    res_sbox = [0 for i in range(4 - len(res_sbox))] + res_sbox
+
+    return res_sbox[1]
+
 def find_key(msg_cipher, part_key):
     msg_1 = msg_cipher[0]
     msg_2 = msg_cipher[1]
@@ -400,8 +423,8 @@ def find_key(msg_cipher, part_key):
     without_L7 = (msg_1[34] + msg_1[39] + msg_1[45] + msg_1[56] + \
                   msg_2[34] + msg_2[39] + msg_2[45] + msg_2[56]) % 2
 
-    L7_1_16 = (f(msg_1[32:], part_key)[16] + msg_1[16]) % 2
-    L7_2_16 = (f(msg_2[32:], part_key)[16] + msg_2[16]) % 2
+    L7_1_16 = (f_q7(msg_1[32:], part_key) + msg_1[16]) % 2
+    L7_2_16 = (f_q7(msg_2[32:], part_key) + msg_2[16]) % 2
 
     # Tester si 0
     if ((without_L7 + L7_1_16 + L7_2_16) % 2) == 0:
@@ -421,7 +444,6 @@ def guess_bf_K8(couples): #  brute force
     for x in range(64):
 
         key = Int2List(x, 6)
-        key += [0 for x in range (42)]
         nb_equal = 0
         for nb_couple in range(len(couples)):
             if find_key(couples[nb_couple], key):
@@ -429,9 +451,8 @@ def guess_bf_K8(couples): #  brute force
         proba = (nb_equal/len(couples))
         if (proba > right):
             right = proba.n()
-            k8 = key[:6]
+            k8 = key
     return k8, right
-
 
 if(is_test):
     load('./test/question7.sage')
@@ -486,8 +507,7 @@ def gen_M_change(m):
     return M
 
 # First tour of DES-8
-
-def f_here(R, Kf):
+def f_q9(R, Kf):
     R48 = [R[31], R[0], R[1], R[2], R[3], R[4]] #expend(R)
     pls = [] # result for K + E(R)
     for i in range(6):
@@ -504,7 +524,7 @@ def one_tour(M, Key):
     L0 = M[0 : len(M) / 2]
     R0 = M[len(M) / 2 : len(M)]
 
-    resf = f_here(R0, Key)
+    resf = f_q9(R0, Key)
     new_R = []
     pos_resf = 0
     for j in [8, 16, 22, 30]:
@@ -512,8 +532,7 @@ def one_tour(M, Key):
         pos_resf += 1
         new_R.append(tmp2)
 
-    LastRL = R0 + new_R
-    return LastRL
+    return new_R
 
 def gen_couple_M(M, K1_6_bit):
     couple_msg = []
@@ -524,7 +543,7 @@ def gen_couple_M(M, K1_6_bit):
         is_three = 0
         for l in range(k + 1, 64):
             c2 = one_tour(M[l], key)
-            if (c1[32:] == c2[32:]):
+            if (c1 == c2):
                 # [8], [16], [22], [30] changes disapeared
                 # at least one of [33], [34] is different
                 couple_msg.append([M[k], M[l]])
@@ -533,18 +552,6 @@ def gen_couple_M(M, K1_6_bit):
                     break
 
     # Now we have 96 couples of message
-    # Some m is already included in m*, we delete them
-    double = []
-    for i in range(0, len(couple_msg), 3):
-        for j in range(0, len(couple_msg)):
-            if (couple_msg[i][0] == couple_msg[j][1]):
-                if (not(i in double)):
-                    double.append(i)
-    double = double[::-1]
-    for x in double:
-        couple_msg = couple_msg[:x] + couple_msg[(x + 3):]
-
-    # 48 couples of message
     return couple_msg
 
 # Get (c, c*) in the normal DES-8 but with (m, m*) choosen by us
@@ -559,31 +566,31 @@ def gen_couple_c(M, kn):
             couple_c.append([couple_c[-1][0], c_star])
     return couple_c
 
-
-if(is_test):
+if(1==0):
     m = [randint(0, 1) for x in range(64)]
     M = gen_M_change(m)
     k1_6_bit = [randint(0, 1) for x in range(6)]
     m_and_m_star = gen_couple_M(M, k1_6_bit)
 
-    print "Q8:\n(m, m*):\n%s\n%s\n...\n%s\n" % \
-        (m_and_m_star[_sage_const_0], m_and_m_star[_sage_const_1],
-         m_and_m_star[-_sage_const_1])
+    # print "Q8:\n(m, m*):\n%s\n%s\n...\n%s\n" % \
+    #     (m_and_m_star[_sage_const_0], m_and_m_star[_sage_const_1],
+    #      m_and_m_star[-_sage_const_1])
 
     key_init = [randint(0, 1) for x in range(64)]
     kn = key_schedule(key_init)
 
     c_and_c_star = gen_couple_c(m_and_m_star, kn)
-    print "(c, c*):\n%s\n%s\n...\n%s\n" % \
-        (c_and_c_star[_sage_const_0], c_and_c_star[_sage_const_1],
-         c_and_c_star[-_sage_const_1])
+    # print "(c, c*):\n%s\n%s\n...\n%s\n" % \
+    #     (c_and_c_star[_sage_const_0], c_and_c_star[_sage_const_1],
+    #      c_and_c_star[-_sage_const_1])
+
 
 
 ###########################
 # Question 9
 ###########################
 
-if(is_test):
+if(1==1):
     # We can't find key with only 48 couple, so n * 48 couples with the same key
     key_init = [randint(0, 1) for x in range(64)]
     kn = key_schedule(key_init)
@@ -613,3 +620,10 @@ if(is_test):
 
     print "Q9:\nFirst 6-bit of K1 and K8 in DES-8:\n%s %s\n%s %s %s\n" % \
           (kn[0][:6], kn[7][:6], right_k1, right_k8, right_p)
+
+# First 6-bit of K1 and K8 in DES-8:
+# [1, 1, 0, 1, 1, 0] [1, 0, 1, 0, 1, 0]
+# Resultat du test:
+# [1, 1, 0, 1, 1, 0] [1, 0, 1, 0, 1, 0] 0.576041666666667
+# CPU times: user 4min 9s, sys: 796 ms, total: 4min 10s
+# Wall time: 4min 12s
