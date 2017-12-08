@@ -1,15 +1,15 @@
 #################################################
-# Master 2 Cryptologie et Sécurité Informatique
+# Master 2 Cryptologie et Sécurite Informatique
 # Projet sur la cryptanalyse du DES
 # Responsable: G. Castagnos
-# Étudiants: Maxime BINEAU
+# Etudiants: Maxime BINEAU
 #            Nicolas GRELLETY
 #            Bowen LIU
 #################################################
 
 ###############
 # Lance test
-is_test = False
+is_test = True
 ###############
 
 # DES-8
@@ -156,7 +156,7 @@ def DES8(M, Kn):
 
     Ln = [L0]
     Rn = [R0]
-    for i in range(8): # # 8 tour in the place of 16
+    for i in range(8): # 8 tour in the place of 16
         Ln.append(Rn[-1])
         resf = f(Rn[-1], Kn[i])
         new_R = []
@@ -341,8 +341,10 @@ def DES_L1_R1(key, L_or_R):
 if(is_test):
     key = [randint(GF(2) (0), 1) for x in range(48)]
     print ("Q5:\nLes indices differents entre L4 et L4* sont: %s\nLes indices "
-           "differents entre R4 et R4* sont: %s\nListe vide = Deux les deux "
-           "sont pareils\n") % (DES_L1_R1(key, 'L'), DES_L1_R1(key, 'R'))
+           "differents entre R4 et R4* sont: %s\n") % \
+           (DES_L1_R1(key, 'L'), DES_L1_R1(key, 'R'))
+
+# With several tests, we could find the indication never changes
 
 ###########################
 # Question 6
@@ -408,7 +410,7 @@ if(is_test):
 ###########################
 
 def f_q7(R, Kf):
-    R48 = [R[31], R[0], R[1], R[2], R[3], R[4]] #expend(R)
+    R48 = [R[31], R[0], R[1], R[2], R[3], R[4]] # expend(R)
     pls = [] # result for K + E(R)
     for i in range(6):
         tmp0 = (Kf[i] + R48[i]) % 2
@@ -437,7 +439,7 @@ def find_key(msg_cipher, part_key):
         return False
 
 def Int2List(x, n):
-  L = ZZ(x).digits(2, padto=n) #L est constitue d'entiers
+  L = ZZ(x).digits(2, padto = n) #L est constitue d'entiers
   L.reverse()
   L = [(el) for el in L] # L est constitue d'elements pas de GF(2)
   return L
@@ -464,11 +466,13 @@ if(is_test):
     K8_6, proba = guess_bf_K8(Couples)
     print "Q7: Part of K8 found %s\n" % (K8_6)
 
+# Part of K8 found [0, 1, 0, 0, 1, 0]
+
 ###########################
 # Question 8
 ###########################
 
-# Generation de m et M
+# Generation of m and M
 
 # Change the bit of position p
 def change_pos(msg_tmp, bit_change, p):
@@ -496,7 +500,7 @@ def gen_M_change(m):
 
     M = []
 
-    # Generation des m* en modifier 8, 16, 20, 30, 33, 34
+    # Generation of m* with modification at 8, 16, 20, 30, 33, 34
     for i in range(64):
         bit_change = Int2List(i, 6)
         list_one = [j for j in range(6) if bit_change[j] == 1]
@@ -570,24 +574,19 @@ def gen_couple_c(M, kn):
             couple_c.append([couple_c[-1][0], c_star])
     return couple_c
 
-if(1==0):
+if(is_test):
     m = [randint(0, 1) for x in range(64)]
     M = gen_M_change(m)
     k1_6_bit = [randint(0, 1) for x in range(6)]
     m_and_m_star = gen_couple_M(M, k1_6_bit)
 
-    # print "Q8:\n(m, m*):\n%s\n%s\n...\n%s\n" % \
-    #     (m_and_m_star[_sage_const_0], m_and_m_star[_sage_const_1],
-    #      m_and_m_star[-_sage_const_1])
-
     key_init = [randint(0, 1) for x in range(64)]
     kn = key_schedule(key_init)
 
     c_and_c_star = gen_couple_c(m_and_m_star, kn)
-    # print "(c, c*):\n%s\n%s\n...\n%s\n" % \
-    #     (c_and_c_star[_sage_const_0], c_and_c_star[_sage_const_1],
-    #      c_and_c_star[-_sage_const_1])
 
+    print "Q8:\n(m, m*):\n%s\n...\n%s\n\n(c, c*):\n%s\n...\n%s\n" % \
+          (m_and_m_star[0], m_and_m_star[-1], c_and_c_star[0], c_and_c_star[-1])
 
 
 ###########################
@@ -602,7 +601,7 @@ if(is_test):
     right_p = 0
     right_k1 = None
     right_k8 = None
-    n = 10 # number of message group for the same key k1
+    n = 7 # number of message group for the same key k1
 
     for k in range(64): # K1
         key1 = Int2List(k, 6)
@@ -622,12 +621,12 @@ if(is_test):
             right_k8 = key8
             right_k1 = key1
 
-    print "Q9:\nFirst 6-bit of K1 and K8 in DES-8:\n%s %s\n%s %s %s\n" % \
-          (kn[0][:6], kn[7][:6], right_k1, right_k8, right_p)
+    print "Q9:\nFirst 6-bit of K1 and K8 in DES-8:\n%s %s %s\n" % \
+          (right_k1, right_k8, right_p)
 
 # First 6-bit of K1 and K8 in DES-8:
 # [1, 1, 0, 1, 1, 0] [1, 0, 1, 0, 1, 0]
 # Resultat du test:
 # [1, 1, 0, 1, 1, 0] [1, 0, 1, 0, 1, 0] 0.576041666666667
-# CPU times: user 4min 9s, sys: 796 ms, total: 4min 10s
-# Wall time: 4min 12s
+# CPU times: user 3min 9s, sys: 796 ms, total: 3min 10s
+# Wall time: 3min 12s
