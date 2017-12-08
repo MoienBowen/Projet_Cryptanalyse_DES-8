@@ -180,6 +180,10 @@ if(is_test):
 # Question 2
 ######################
 
+def Sbox(x, S):
+  y =  IntToList(S[ListToInt(x)], 4)
+  return y
+
 def ListToInt(x):
   y = copy(x)
   y.reverse()
