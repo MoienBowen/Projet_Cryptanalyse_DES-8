@@ -590,7 +590,7 @@ if(1==0):
 # Question 9
 ###########################
 
-if(1==1):
+if(is_test):
     # We can't find key with only 48 couple, so n * 48 couples with the same key
     key_init = [randint(0, 1) for x in range(64)]
     kn = key_schedule(key_init)
